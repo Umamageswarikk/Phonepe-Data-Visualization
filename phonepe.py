@@ -5,6 +5,7 @@ import pandas as pd
 import mysql.connector
 import json
 import requests
+from PIL import Image
 
 # set page configuration
 st.set_page_config(layout="wide")
@@ -271,7 +272,7 @@ def AggregatedUser_plot3(df,state):
 
     # Pie chart
     fig_pie = px.pie(auyqs, values='Transaction_count', names='Brands',
-                     title=f"Transaction count distribution for Brands in {state}",
+                     title=f" Transaction count distribution for Brands in {state}",
                      hover_data=["Percentage"],
                      labels={"Brands": "Brands", "Transaction_count": "Transaction Count"},
                      width=800, height=600)
@@ -308,6 +309,58 @@ def Map_insurance_District(df,state):
 
     return tacy
 
+# map user
+
+def MapUser_plot1(df,year):
+    muy=df[df["Years"]==year]
+    muy.reset_index(drop=True,inplace=True)
+
+    muyg=pd.DataFrame(muy.groupby("States")[["RegisteredUser","AppOpens"]].sum())
+    muyg.reset_index(inplace=True)
+
+
+    fig_line4=px.line(muyg,x="States",y=["RegisteredUser","AppOpens"],title=f"{year} Registered User and App Opens",
+                    width=1000,height=600,markers=True)
+
+    st.plotly_chart(fig_line4)
+
+    return muy
+
+# map_user Analysis2
+
+def MapUser_plot2(df,quarter):
+    muyq=df[df["Quarter"]==quarter]
+    muyq.reset_index(drop=True,inplace=True)
+
+    muyqg=pd.DataFrame(muyq.groupby("States")[["RegisteredUser","AppOpens"]].sum())
+    muyqg.reset_index(inplace=True)
+
+    fig_line5=px.line(muyqg,x="States",y=["RegisteredUser","AppOpens"],title=f"{df['Years'].min()} year {quarter} Quarter - Registered User and App opens",
+                    width=1000,height=600,color_discrete_sequence=px.colors.sequential.Agsunset_r,markers=True)
+
+    st.plotly_chart(fig_line5)
+
+    return muyq
+
+# Map user analysis 3
+def MapUser_plot3(df,state):
+    muyqs=df[df["States"]==state]
+    muyqs.reset_index(drop=True,inplace=True)
+    
+
+    fig_bar8=px.bar(muyqs,x="RegisteredUser",y="Districts",orientation="h",
+                title=f"{states} Registered User",width=1000)
+
+    st.plotly_chart(fig_bar8)
+
+    
+    fig_bar9=px.bar(muyqs,x="AppOpens",y="Districts",orientation="h",
+                title=f"{states} App Opens",width=1000,color_discrete_sequence=px.colors.sequential.Rainbow)
+
+    st.plotly_chart(fig_bar9)
+
+
+
 
     
 
@@ -317,13 +370,51 @@ def Map_insurance_District(df,state):
 st.title("PHONEPE PULSE DATA VISUALIZATION AND EXPLORATION")
 
 with st.sidebar:
-    select = option_menu("Main Menu", ["Home", "Data Exploration"])
+    select = option_menu("Main Menu", ["Home","Demo Video", "Data Exploration"])
 
 if select == "Home":
-    pass
+
+    column1,column2=st.columns(2)
+
+    with column2:
+        st.video(r"C:\guvi\my projects\phone pe -2\1105636135-preview.mp4")
+
+        st.download_button("Download The App Now","https://www.phonepe.com/app-download/")
+
+        
+    with column1:
+        st.header("PhonePE")
+        st.subheader("India's Best Transaction App")
+        st.write("****Features****")
+        st.write("****Credit & Debit Card Linking****")
+        st.write("****Bank Balance Check****")
+        st.write("****Money Storage****")
+        st.write("****PIN Authorisation****")
+        
+
+
+    
+
+
+elif select == "Demo Video":
+
+    column3,column4=st.columns(2)
+
+    with column3:
+       st.video(r"C:\guvi\my projects\phone pe -2\phonepe.mp4")
+
+
+    with column4:
+        st.image(Image.open(r"C:\guvi\my projects\phone pe -2\img.webp"),width=230)     # height is not adjusted with image 
+
+    
+
+
+
 
 elif select == "Data Exploration":
-    tab1, tab2, tab3 = st.tabs(["Aggregated Analysis", "Map Analysis", "Top Analysis"])
+  
+    tab1, tab2 = st.tabs(["Aggregated Analysis", "Map Analysis"])
 
     with tab1:
         method = st.radio("Select The Method", ["Insurance Analysis", "Transaction Analysis", "User Analysis"])
@@ -419,7 +510,7 @@ elif select == "Data Exploration":
 
             column1,column2=st.columns(2)
             with column1:
-                quarters = st.slider("Select The Quarter", Map_insurance_tac_Y['Quarter'].unique().min(),
+                quarters = st.slider("Select The Quarter_Mapinsurance", Map_insurance_tac_Y['Quarter'].unique().min(),
                                     Map_insurance_tac_Y['Quarter'].unique().max(), Map_insurance_tac_Y['Quarter'].unique().min())
                 
             Map_insurance_tac_Y_Q=Transaction_amount_count_Y_Q(Map_insurance_tac_Y,quarters)
@@ -432,23 +523,72 @@ elif select == "Data Exploration":
 
 
         elif method1 == "Map Transaction":
-            pass
+            
+            column1, column2 = st.columns(2)
+            with column1:
+                years = st.slider("Select The Year_mapTransaction", Map_transaction['Years'].unique().min(),
+                                Map_transaction['Years'].unique().max(), Map_transaction['Years'].unique().min())
+
+
+            MapTransaction_tac_Y=Transaction_amount_count_Y(Map_transaction,years)
+
+            column1,column2=st.columns(2)
+            with column1:
+                states=st.selectbox("Select The State_MapTransaction",MapTransaction_tac_Y["States"].unique())
+
+            Map_insurance_District(MapTransaction_tac_Y,states)    
+
+
+            column1,column2=st.columns(2)
+            with column1:
+                quarters = st.slider("Select The Quarter_mapTransaction", MapTransaction_tac_Y['Quarter'].unique().min(),
+                                    MapTransaction_tac_Y['Quarter'].unique().max(), MapTransaction_tac_Y['Quarter'].unique().min())
+                
+            Maptransaction_tac_Y_Q=Transaction_amount_count_Y_Q(MapTransaction_tac_Y,quarters)
+
+            column1,column2=st.columns(2)
+            with column1:
+                states=st.selectbox("Select The State_MapT",Maptransaction_tac_Y_Q["States"].unique())
+
+            Map_insurance_District(Maptransaction_tac_Y_Q,states)    
+
+
 
         elif method1 == "Map User":
-            pass
+            column1, column2 = st.columns(2)
+            with column1:
+                years = st.slider("Select The Year_mapUser", Map_user['Years'].unique().min(),
+                                  Map_user['Years'].unique().max(), Map_user['Years'].unique().min())
 
-    with tab3:
-        method2 = st.radio("Select The Method", ["Top Insurance", "Top Transaction", "Top User"])
+            MapUser_Y=MapUser_plot1(Map_user,years)
 
-        if method2 == "Top Insurance":
-            pass
+            column1,column2=st.columns(2)
+            with column1:
+                quarters = st.slider("Select The Quarter_MapUser", MapUser_Y['Quarter'].unique().min(),
+                                   MapUser_Y['Quarter'].unique().max(), MapUser_Y['Quarter'].unique().min())
+                
+                MapUser_Y_Q=MapUser_plot2(Map_user,2)
 
-        elif method2 == "Top Transaction":
-            pass
+            column1,column2=st.columns(2)
+            with column1:
+                states=st.selectbox("Select The State_MapUser",MapUser_Y_Q["States"].unique())
 
-        elif method2 == "Top User":
-            pass
+            MapUser_plot3(MapUser_Y_Q,states)    
 
-elif select == "Top Charts":
-    pass
+
+
+    # with tab3:
+    #     method2 = st.radio("Select The Method", ["Top Insurance", "Top Transaction", "Top User"])
+
+    #     if method2 == "Top Insurance":
+    #         pass
+
+    #     elif method2 == "Top Transaction":
+    #         pass
+
+    #     elif method2 == "Top User":
+    #         pass
+
+# elif select == "Top Charts":
+#     pass
 
